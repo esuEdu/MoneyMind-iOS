@@ -29,7 +29,7 @@ enum HTTPMethod: String {
     case delete = "DELETE"
 }
 
-// MARK: - Network Worker Implementation
+// MARK: - Network Worker
 actor NetworkWorker: NetworkWorkerProtocol {
     private let session: URLSession
     private let decoder: JSONDecoder
