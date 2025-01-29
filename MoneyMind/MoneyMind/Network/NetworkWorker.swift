@@ -12,27 +12,10 @@ protocol NetworkWorkerProtocol {
     func request<T: Decodable>(_ request: APIRequest, responseType: T.Type) async throws -> T
 }
 
-// MARK: - Network Error
-enum NetworkError: Error, LocalizedError {
-    case noInternetConnection
-    case invalidURL
-    case requestFailed(statusCode: Int, data: Data?)
-    case decodingFailed
-    case custom(message: String)
-    
-    var errorDescription: String? {
-        switch self {
-        case .noInternetConnection: return "Please check your internet connection"
-        case .invalidURL: return "Invalid URL format"
-        case .requestFailed(let statusCode, _): return "Request failed with status code: \(statusCode)"
-        case .decodingFailed: return "Failed to decode response"
-        case .custom(let message): return message
-        }
-    }
-}
 
 // MARK: - API Request Protocol
 protocol APIRequest {
+    var baseURL: URL { get }
     var path: String { get }
     var method: HTTPMethod { get }
     var parameters: [String: Any]? { get }
@@ -49,18 +32,14 @@ enum HTTPMethod: String {
 // MARK: - Network Worker Implementation
 actor NetworkWorker: NetworkWorkerProtocol {
     private let session: URLSession
-    private let baseURL: URL
     private let decoder: JSONDecoder
     
     init(
-        baseURL: URL,
         session: URLSession = .shared,
         decoder: JSONDecoder = JSONDecoder()
     ) {
-        self.baseURL = baseURL
         self.session = session
         self.decoder = decoder
-        self.decoder.keyDecodingStrategy = .convertFromSnakeCase
     }
     
     func request<T: Decodable>(_ request: APIRequest, responseType: T.Type) async throws -> T {
@@ -76,6 +55,10 @@ actor NetworkWorker: NetworkWorkerProtocol {
             throw NetworkError.requestFailed(statusCode: httpResponse.statusCode, data: data)
         }
         
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("Response JSON:\n\(jsonString)")
+        }
+        
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
@@ -84,7 +67,7 @@ actor NetworkWorker: NetworkWorkerProtocol {
     }
     
     private func buildURLRequest(from request: APIRequest) throws -> URLRequest {
-        let url = baseURL.appendingPathComponent(request.path)
+        let url = request.baseURL.appendingPathComponent(request.path)
         
         guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             throw NetworkError.invalidURL

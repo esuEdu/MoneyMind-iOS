@@ -5,7 +5,6 @@
 //  Created by Eduardo on 29/01/25.
 //
 
-
 import Foundation
 
 protocol ExpensesPresentationLogic {
@@ -26,11 +25,7 @@ class ExpensesPresenter: ExpensesPresentationLogic {
             Expense.ViewModel(
                 title: entity.title,
                 amount: String(format: "$%.2f", entity.amount),
-                date: DateFormatter.localizedString(
-                    from: entity.date,
-                    dateStyle: .medium,
-                    timeStyle: .none
-                )
+                date: entity.date
             )
         }
         DispatchQueue.main.async { [weak self] in

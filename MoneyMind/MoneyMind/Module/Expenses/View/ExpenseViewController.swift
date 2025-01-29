@@ -16,6 +16,8 @@ final class ExpensesViewController: UIViewController, ExpensesDisplayLogic {
     var interactor: ExpensesBusinessLogic?
     private var expenses: [Expense.ViewModel] = []
     
+    private var fetchTask: Task<Void, Never>?
+    
     private lazy var tableView: UITableView = {
         let table = UITableView()
         table.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
@@ -37,7 +39,13 @@ final class ExpensesViewController: UIViewController, ExpensesDisplayLogic {
     
     private func fetchExpenses() {
         let request = Expense.Request(filterDate: nil)
-        interactor?.fetchExpenses(request: request)
+        fetchTask = Task {
+            await interactor?.fetchExpenses(request: request)
+        }
+    }
+    
+    func concelRequest() {
+        fetchTask?.cancel()
     }
     
     // MARK: - ExpensesDisplayLogic

@@ -23,12 +23,27 @@ enum Expense {
     }
 }
 
-
 struct ExpenseEntity: Codable {
-    let id: UUID
+    let id: String
     let title: String
     let amount: Double
-    let date: Date
-    let category: String?
-    let description: String?
+    let date: String
+    let category: String
+    let description: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title = "name"
+        case amount
+        case date
+        case category
+        case description
+    }
 }
+
+
+
+
+
+
+

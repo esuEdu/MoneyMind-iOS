@@ -8,29 +8,34 @@
 import Foundation
 
 protocol ExpensesBusinessLogic {
-    func fetchExpenses(request: Expense.Request)
+    func fetchExpenses(request: Expense.Request) async
 }
 
 class ExpensesInteractor: ExpensesBusinessLogic {
     var presenter: ExpensesPresentationLogic?
     
-    func fetchExpenses(request: Expense.Request) {
-        // Simulate async operation
-        DispatchQueue.global().async {
-            do {
-                let expenses = try self.fetchExpensesFromStorage(filterDate: request.filterDate)
-                self.presenter?.expensesFetched(expenses: expenses)
-            } catch {
-                self.presenter?.presentError(error)
-            }
-        }
+    private let networkWorker: NetworkWorkerProtocol
+    
+    init(networkWorker: NetworkWorkerProtocol = NetworkWorker()) {
+        self.networkWorker = networkWorker
     }
     
-    private func fetchExpensesFromStorage(filterDate: Date?) throws -> [ExpenseEntity] {
-        // Add real data fetching logic here
-        return [
-            ExpenseEntity(id: UUID(), title: "Groceries", amount: 50.0, date: Date()),
-            ExpenseEntity(id: UUID(), title: "Transport", amount: 20.0, date: Date())
-        ]
+    func fetchExpenses(request: Expense.Request) async {
+        do {
+            let response = try await networkWorker.request(
+                ExpensesAPI.fetchExpenses,
+                responseType: ExpenseResponse.self
+            )
+            
+            print(response)
+            
+            await MainActor.run {
+                presenter?.expensesFetched(expenses: response.expense.items)
+            }
+        } catch {
+            await MainActor.run {
+                presenter?.presentError(error)
+            }
+        }
     }
 }

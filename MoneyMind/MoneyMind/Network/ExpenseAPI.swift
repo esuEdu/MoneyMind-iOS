@@ -8,9 +8,9 @@
 import Foundation
 
 enum ExpensesAPI: APIRequest {
-    var baseURL: String { "https://onn5nxytud.execute-api.us-east-1.amazonaws.com/dev" }
+    var baseURL: URL { URL(string: "https://onn5nxytud.execute-api.us-east-1.amazonaws.com/dev")! }
     
-    case fetchExpenses(filter: Date?)
+    case fetchExpenses
     case createExpense(ExpenseEntity)
     
     var path: String {
@@ -29,14 +29,14 @@ enum ExpensesAPI: APIRequest {
     
     var parameters: [String: Any]? {
         switch self {
-        case .fetchExpenses(let filter):
-            return filter != nil ? ["date": filter!.ISO8601Format()] : nil
+        case .fetchExpenses:
+            return nil
             
         case .createExpense(let expense):
             return [
                 "title": expense.title,
                 "amount": expense.amount,
-                "date": expense.date.ISO8601Format(),
+                "date": expense.date,
             ]
         }
     }
